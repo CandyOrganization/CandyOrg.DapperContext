@@ -1,8 +1,6 @@
 ﻿using System.Reflection;
 using CandyOrg.DapperContext.Common.Interfaces.Dapper;
 using CandyOrg.DapperContext.Common.Interfaces.Dapper.Settings;
-using CandyOrg.DapperContext.Dapper.Settings;
-using CandyOrg.DapperContext.Dapper;
 using FluentMigrator.Runner;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,21 +9,21 @@ namespace CandyOrg.DapperContext;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddDapper(this IServiceCollection services)
+    public static IServiceCollection AddDapper(this IServiceCollection services, IDapperSettings dapperSettings)
     {
-        services.AddSingleton<IDapperSettings, DapperSettings>();
+        services.AddSingleton<IDapperSettings>(dapperSettings);
         services.AddSingleton<IDapperContext, Dapper.DapperContext>();
         return services;
     }
     
-    public static IServiceCollection AddMigrations(this IServiceCollection services, IConfiguration configuration, Assembly migrationsAssembly)
+    public static IServiceCollection AddMigrations(this IServiceCollection services, IDapperSettings dapperSettings, Assembly migrationsAssembly)
     {
         services
             .AddLogging(c => c.AddFluentMigratorConsole())
             .AddFluentMigratorCore()
             .ConfigureRunner(c => c
                 .AddPostgres()
-                .WithGlobalConnectionString(configuration.GetConnectionString("Database"))
+                .WithGlobalConnectionString(dapperSettings.ConnectionString)
                 .ScanIn(migrationsAssembly));
         
         return services;
